@@ -34,6 +34,7 @@ def edit_video(
     webcam_video: Path,
     output_path: Path,
     is_short: bool = False,
+    use_avatar: bool = True,
 ) -> Path:
     """
     Assemble the final video from script + raw recordings.
@@ -46,11 +47,22 @@ def edit_video(
     console.print(f"  Segments: {len(script.segments)}")
     console.print(f"  Estimated duration: {script.estimated_duration_seconds:.0f}s")
 
-    # Build FFmpeg filter complex
+    # Apply caricature filter to webcam before compositing
+    active_webcam = webcam_video
+    if use_avatar and webcam_video.exists():
+        from src.modules.avatar import AvatarProcessor
+        avatar = AvatarProcessor(baseline_dir=webcam_video.parent.parent)
+        caricature_path = webcam_video.parent / f"caricature_{webcam_video.name}"
+        if not caricature_path.exists():
+            active_webcam = avatar.process_video(webcam_video, caricature_path)
+        else:
+            console.print("[dim]Using cached caricature webcam[/dim]")
+            active_webcam = caricature_path
+
     if is_short:
-        return _edit_short(script, screen_video, webcam_video, output_path)
+        return _edit_short(script, screen_video, active_webcam, output_path)
     else:
-        return _edit_standard(script, screen_video, webcam_video, output_path)
+        return _edit_standard(script, screen_video, active_webcam, output_path)
 
 
 def _edit_standard(

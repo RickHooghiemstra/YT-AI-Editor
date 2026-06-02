@@ -94,6 +94,56 @@ def pipeline(
 
 
 @app.command()
+def calibrate(
+    photo: Path = typer.Argument(..., help="Path to a photo of your face (neutral expression, good lighting)"),
+) -> None:
+    """
+    Calibrate the avatar filter to YOUR face.
+    Run this once with a selfie — the system learns your neutral expression
+    so exaggeration is accurate relative to you specifically.
+    """
+    from src.modules.avatar import AvatarProcessor
+    from src.utils.config import get_settings
+
+    if not photo.exists():
+        console.print(f"[red]Photo not found: {photo}[/red]")
+        raise typer.Exit(1)
+
+    settings = get_settings()
+    settings.ensure_dirs()
+    processor = AvatarProcessor(baseline_dir=settings.recordings_dir)
+    baseline = processor.calibrate_from_photo(photo)
+    console.print(
+        "\n[green]Done![/green] Your face baseline is saved. "
+        "The caricature filter will now exaggerate relative to YOUR neutral face.\n"
+        "Run [bold]ytai avatar-preview[/bold] to see it live before recording."
+    )
+
+
+@app.command(name="avatar-preview")
+def avatar_preview(
+    device: int = typer.Option(0, "--device", "-d", help="Webcam device index"),
+    exaggeration: float = typer.Option(2.5, "--exaggeration", "-e", help="Exaggeration multiplier (1.0 = none, 3.0 = extreme)"),
+    cartoon: float = typer.Option(0.75, "--cartoon", "-c", help="Cartoon shader strength 0.0-1.0"),
+) -> None:
+    """
+    Live preview of the caricature avatar using your webcam.
+    Shows Original | Caricature side by side. Press Q to quit.
+    Use this to tune the exaggeration before a recording session.
+    """
+    from src.modules.avatar import AvatarProcessor
+    from src.utils.config import get_settings
+
+    settings = get_settings()
+    processor = AvatarProcessor(
+        exaggeration=exaggeration,
+        cartoon_strength=cartoon,
+        baseline_dir=settings.recordings_dir,
+    )
+    processor.preview_live(device)
+
+
+@app.command()
 def setup() -> None:
     """Interactive first-time setup: configure API keys and check dependencies."""
     from src.utils.config import get_settings
@@ -164,7 +214,7 @@ def _check_dependencies() -> None:
     py_deps = [
         "anthropic", "faster_whisper", "moviepy", "cv2",
         "PIL", "pynput", "questionary", "rich",
-        "googleapiclient",
+        "googleapiclient", "mediapipe",
     ]
     for dep in py_deps:
         try:

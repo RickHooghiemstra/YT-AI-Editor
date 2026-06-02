@@ -178,6 +178,70 @@ python main.py process gameplay.mp4 facecam.mp4 mic_audio.wav
 
 ---
 
+## Caricature avatar
+
+Instead of showing your raw webcam feed in the corner of the video, the pipeline renders a **stylized cartoon version of you** with exaggerated reactions — when you barely raise an eyebrow, the avatar raises it dramatically; a small smile becomes a huge grin; wide eyes become enormous.
+
+### How it works
+
+MediaPipe detects 468 landmarks on your face in every frame. The filter:
+1. Measures expression intensity (how open your mouth is, how raised your brows are, etc.)
+2. Amplifies those measurements by 2.5× using a smooth power curve — so subtle reactions read as big ones on screen
+3. Warps the eye, brow, and mouth regions of your actual face to match the exaggerated values
+4. Applies a cartoon shader: bilateral smooth + edge overlay + saturation boost
+5. Adds comic overlays on extreme reactions (shock lines for surprise, sweat drop for panic)
+
+The exaggeration is calibrated to **your specific neutral face** — not a generic face — so it reads as you, just more expressive.
+
+### Step 1 — Calibrate once from a photo
+
+Take a selfie with a neutral expression (relaxed face, looking at camera, decent lighting). Then:
+
+```bash
+python main.py calibrate my_photo.jpg
+```
+
+This runs MediaPipe on your photo, records your resting face proportions, and saves them to `recordings/neutral_baseline.json`. Takes about 5 seconds.
+
+### Step 2 — Preview before recording
+
+See the filter live on your webcam before you commit to a session:
+
+```bash
+python main.py avatar-preview
+```
+
+This opens a side-by-side window: **Original | Caricature**. Use it to verify the effect looks right. Press Q to close.
+
+Tune the strength with flags:
+```bash
+python main.py avatar-preview --exaggeration 3.0 --cartoon 0.9
+```
+
+| Flag | Default | Effect |
+|---|---|---|
+| `--exaggeration` | `2.5` | How much reactions are amplified (1.0 = off, 3.0 = extreme) |
+| `--cartoon` | `0.75` | Cartoon shader strength (0 = natural, 1 = full comic style) |
+
+### Step 3 — It runs automatically
+
+Once calibrated, the caricature filter runs automatically as part of the pipeline. Your raw webcam recording is kept, and a processed version is rendered before compositing into the final video. No extra steps needed.
+
+To disable the avatar for a specific run, pass `--no-avatar` (not yet exposed) or delete `recordings/neutral_baseline.json` to revert to raw webcam.
+
+### What the reactions look like
+
+| Your expression | What the avatar does |
+|---|---|
+| Slight smile | Wide grin |
+| Raised eyebrow | Dramatic lift |
+| Eyes going wide | Anime-large eyes |
+| Mouth dropping open | Exaggerated jaw drop |
+| Extreme surprise | Shock lines radiate from center of frame |
+| Panic / "oh no" moment | Blue sweat drop appears top-right |
+
+---
+
 ## Video types
 
 Answer one question differently and you get a completely different video from the same footage:
@@ -265,3 +329,9 @@ Run the first upload locally once to generate `youtube_token.json`, then copy th
 
 **MoviePy caption text doesn't appear**
 Install ImageMagick: `sudo apt install imagemagick`. Captions require it; everything else works without it.
+
+**Avatar filter is too extreme / too subtle**
+Run `python main.py avatar-preview --exaggeration 1.5` to dial it back, or `--exaggeration 3.5` to push it further. Then re-run the pipeline — the processed webcam file is cached, so delete `recordings/raw/<session>/caricature_webcam.mp4` to force a re-render with new settings.
+
+**No face detected in calibration photo**
+Make sure the photo shows your full face with good lighting and no heavy shadows. The face should take up at least 20% of the frame. MediaPipe works best on forward-facing photos.
