@@ -306,12 +306,141 @@ Downloads automatically on first use.
 
 ---
 
+## Quick Clip mode
+
+The full pipeline takes ~20 minutes. Quick Clip takes ~5–8. It skips transcription entirely and uses only visual analysis to find highlights. Two questions, then done.
+
+```bash
+python main.py quick-clip screen.mp4 webcam.mp4
+```
+
+It asks: game name and tone. That's it. Claude Vision scans more frames per minute to compensate for the missing transcript, picks the top-scored moments, assembles a 3-minute highlights reel, and offers to upload. Good for days when you just want something posted fast.
+
+---
+
+## Clip library
+
+Every time you run the pipeline (full or quick-clip), every highlight moment scored 6 or higher gets saved to `output/clip_library.json`. This builds up over time into a searchable bank of your best moments.
+
+### See what's in your library
+
+```bash
+python main.py library
+```
+
+Prints a summary table: game, clip count, average score, most recent session.
+
+### Compile a best-of video
+
+```bash
+python main.py best-of --game valorant --days 7
+```
+
+This pulls your top-scored Valorant clips from the past 7 days, assembles them into a compilation, generates new YouTube metadata for the compilation format, and offers to upload — all without re-recording or re-analyzing anything.
+
+| Flag | Default | What it does |
+|---|---|---|
+| `--game` | all games | Filter to one game |
+| `--days` | `7` | How far back to look (0 = all time) |
+| `--min-score` | `7` | Minimum highlight score to include |
+| `--channel` | `My Gaming Channel` | Your channel name for metadata |
+
+Examples:
+```bash
+python main.py best-of                             # all games, last 7 days
+python main.py best-of --game "CS2" --days 30      # CS2, last month
+python main.py best-of --days 0 --min-score 9      # all time, only 9-10/10 moments
+```
+
+---
+
+## Background music
+
+The pipeline automatically adds background music to your video. The music is mixed at 15% volume under your gameplay audio — audible but never drowning out commentary.
+
+Drop royalty-free MP3 or WAV files into the matching mood folder:
+
+```
+music/
+├── energetic/    ← hype beats, electronic, drums
+├── chill/        ← lo-fi, ambient, acoustic
+├── dramatic/     ← cinematic, orchestral swells
+├── funny/        ← quirky, upbeat, cartoon-style
+└── inspirational/ ← piano, uplifting synth
+```
+
+The AI assigns a mood to each video segment. The mixer picks a matching track, fades it in and out, and loops it if needed to cover the full video length.
+
+**Where to get free tracks:** YouTube Audio Library, Incompetech (Kevin MacLeod, CC BY 4.0), Pixabay Music, FreeMusicArchive. See `music/README.md` for details and attribution instructions.
+
+If the music folder is empty, the pipeline skips this step silently — no error, just no music.
+
+---
+
+## Chapter markers
+
+Every generated video automatically gets YouTube chapter timestamps embedded in the description. Claude names each segment during script generation, and the pipeline calculates the exact output timestamps.
+
+Example description output:
+```
+0:00 Intro
+0:18 The Clutch
+1:02 Easy Round
+1:45 Almost Threw It
+2:30 Final Push
+3:15 Outro
+```
+
+YouTube displays these as clickable chapters in the video progress bar. Chapters are only added when there are 3 or more segments (YouTube's minimum requirement) and the first segment always starts at 0:00.
+
+---
+
+## Game-specific AI
+
+The analyzer and scriptwriter know about 9 games and what matters in each one:
+
+| Game | What Claude watches for |
+|---|---|
+| **Valorant** | Aces, clutches, spike defuses, eco round wins |
+| **CS2** | Ace, AWP one-taps, bomb play, pistol round wins |
+| **Minecraft** | Deaths (especially ironic ones), builds, boss fights, speedrun milestones |
+| **Fortnite** | Victory Royale, box fight wins, creative edits, building outplays |
+| **League of Legends** | Pentakills, Baron/Dragon steals, 1v5 outplays, teamfight wins |
+| **Apex Legends** | Squad wipes, banner retrieves, third-party survivals, movement tech |
+| **Call of Duty** | Nukes, Warzone wins, killstreaks, long-range snipes |
+| **Overwatch** | Team wipe ults, clutch rezzes, environmental kills |
+| **Rocket League** | Aerials, ceiling shots, flip resets, impossible saves |
+
+Any other game gets a generic profile that still works well — Claude falls back to looking for skill displays, close calls, wins, and reactions.
+
+The game name you type during the interview is fuzzy-matched, so "val", "valo", "valorant" all work.
+
+---
+
+## Preview before upload
+
+After the video renders, a media player opens automatically so you can watch before anything goes to YouTube. Then you get three choices:
+
+```
+? How does it look?
+  ❯ Looks good — proceed with upload
+    Looks good — save locally, skip upload for now
+    Something is wrong — abort
+```
+
+The player used is: `mpv` → `vlc` → `xdg-open` on Linux, `open` on macOS, `start` on Windows. Install `mpv` for the best experience (`sudo apt install mpv`).
+
+---
+
 ## CLI reference
 
 ```
 python main.py pipeline                          # record + process + upload, all-in-one
 python main.py record                            # hotkey daemon only
 python main.py process screen.mp4 cam.mp4 a.wav # process existing files
+python main.py quick-clip screen.mp4 webcam.mp4 # fast highlights, no transcription
+python main.py best-of --game valorant --days 7  # compile best-of from clip library
+python main.py library                           # show clip library summary
 python main.py calibrate photo.jpg              # calibrate avatar to your face
 python main.py avatar-preview                   # live side-by-side webcam preview
 python main.py setup                            # check all dependencies and keys
@@ -341,3 +470,9 @@ For calibration: use a photo where your face fills at least 20% of the frame, wi
 
 **Avatar reactions are too extreme or too subtle**
 Run `python main.py avatar-preview --exaggeration 1.8` to dial back, or `--exaggeration 3.2` to push further. Once you find the right value, delete the cached `caricature_webcam.mp4` in the session folder and re-run the pipeline to render with the new setting.
+
+**Best-of returns "no clips found"**
+The clip library only contains sessions already processed by the pipeline. Record and process at least one session first. If you've done that, check that the source recording files still exist — the library stores file paths, and clips pointing to deleted or moved files are filtered out automatically.
+
+**Music isn't in the final video**
+Check that `music/<mood>/` contains at least one MP3 or WAV file. Run `ls music/energetic/` to verify. The pipeline prints a warning and skips music silently if the folder is empty — it won't error. See `music/README.md` for recommended free sources.

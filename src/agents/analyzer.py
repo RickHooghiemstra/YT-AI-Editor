@@ -16,7 +16,7 @@ import numpy as np
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TaskProgressColumn, TextColumn
 
-from src.prompts.templates import ANALYZER_SYSTEM, ANALYZER_FRAMES_PROMPT
+from src.prompts.templates import ANALYZER_SYSTEM, ANALYZER_FRAMES_PROMPT, QUICK_CLIP_PROMPT
 from src.utils.config import get_settings
 
 console = Console()
@@ -64,12 +64,14 @@ def analyze_footage(
     game_name: str,
     audience: str,
     frames_per_minute: int = 2,
+    game_profile=None,
+    quick_mode: bool = False,
 ) -> AnalysisResult:
     """
     Extract key frames from gameplay video and analyze with Claude Vision.
-    frames_per_minute: how many frames to sample per minute of footage.
+    game_profile: GameProfile for game-specific context injection.
+    quick_mode: use QUICK_CLIP_PROMPT (no transcript context needed).
     """
-    settings = get_settings()
     key_frames_dir = screen_video.parent / "key_frames"
     key_frames_dir.mkdir(exist_ok=True)
 
@@ -84,6 +86,8 @@ def analyze_footage(
         audience=audience,
         duration=duration,
         key_frames_dir=key_frames_dir,
+        game_profile=game_profile,
+        quick_mode=quick_mode,
     )
     return result
 
@@ -142,6 +146,8 @@ def _analyze_with_claude(
     audience: str,
     duration: float,
     key_frames_dir: Path,
+    game_profile=None,
+    quick_mode: bool = False,
 ) -> AnalysisResult:
     import anthropic
 
@@ -183,14 +189,16 @@ def _analyze_with_claude(
                     },
                 })
 
-            content.append({
-                "type": "text",
-                "text": ANALYZER_FRAMES_PROMPT.format(
-                    game_name=game_name,
-                    duration=f"{int(duration // 60)}m {int(duration % 60)}s",
-                    audience=audience,
-                ),
-            })
+            game_context = game_profile.context_block() if game_profile else f"Game: {game_name}"
+            template = QUICK_CLIP_PROMPT if quick_mode else ANALYZER_FRAMES_PROMPT
+            prompt_text = template.format(
+                game_context=game_context,
+                duration=f"{int(duration // 60)}m {int(duration % 60)}s",
+                audience=audience,
+                # legacy key kept for backward compat
+                game_name=game_name,
+            )
+            content.append({"type": "text", "text": prompt_text})
 
             response = client.messages.create(
                 model=settings.claude_model,

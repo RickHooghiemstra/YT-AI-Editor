@@ -16,6 +16,8 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+import questionary
+
 import typer
 from rich.console import Console
 
@@ -91,6 +93,54 @@ def pipeline(
     Press hotkey to start gaming, press again when done — the AI handles everything.
     """
     _run_with_auto_process(hotkey)
+
+
+@app.command(name="quick-clip")
+def quick_clip(
+    screen: Path = typer.Argument(..., help="Screen recording"),
+    webcam: Path = typer.Argument(..., help="Webcam recording"),
+    session_id: str = typer.Option("quick", "--session-id", "-s"),
+) -> None:
+    """
+    Fast highlights reel — no transcription, vision-only.
+    2 questions, ~5 minute runtime. Great for quick posts.
+    """
+    from src.agents.orchestrator import Pipeline
+    from src.utils.config import get_settings
+
+    get_settings().ensure_dirs()
+    for f in [screen, webcam]:
+        if not f.exists():
+            console.print(f"[red]File not found: {f}[/red]")
+            raise typer.Exit(1)
+
+    Pipeline().run_quick_clip(screen, webcam, session_id)
+
+
+@app.command(name="best-of")
+def best_of(
+    game: Optional[str] = typer.Option(None, "--game", "-g", help="Filter by game name"),
+    days: Optional[int] = typer.Option(7, "--days", "-d", help="Look back N days (0 = all time)"),
+    channel: str = typer.Option("My Gaming Channel", "--channel", "-c"),
+    min_score: int = typer.Option(7, "--min-score", help="Minimum highlight score 1-10"),
+) -> None:
+    """
+    Compile a best-of video from your clip library.
+    Pulls top-scored highlights from past sessions without re-analyzing anything.
+    """
+    from src.agents.orchestrator import Pipeline
+    from src.utils.config import get_settings
+
+    get_settings().ensure_dirs()
+    look_back = days if days and days > 0 else None
+    Pipeline().run_best_of(game=game, days=look_back, channel_name=channel, min_score=min_score)
+
+
+@app.command(name="library")
+def library_summary() -> None:
+    """Show a summary of all clips saved in the clip library."""
+    from src.modules.clip_library import get_library
+    get_library().summary()
 
 
 @app.command()
