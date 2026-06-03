@@ -10,17 +10,17 @@ Here's exactly what happens when you use this tool:
 
 **You play 45 minutes of Valorant.**
 
-At your desk you have two terminals open — one running the pipeline daemon, one free. You press `Ctrl+Shift+R` and start playing. A small message appears: *"Recording started."* You forget about it and just play.
+At your desk you have a terminal open running the pipeline daemon. You press `Ctrl+Shift+R` and start playing. *"Recording started."* You forget about it and just play.
 
-You get a sick clutch 1v4 round at minute 12. You die hilariously at minute 28. You ace an eco round at minute 37. You have no idea the AI will find all three moments by itself.
+You get a sick clutch 1v4 at minute 12 — your eyes go wide, jaw drops, you yell "LET'S GO". You die hilariously at minute 28. You ace an eco round at minute 37. None of that needs to be noted down. The AI finds all of it.
 
-You press `Ctrl+Shift+R` again when you're done. The terminal prints:
+You press `Ctrl+Shift+R` again when done. The terminal prints:
 
 ```
 Recording stopped — 44m 32s captured
 ```
 
-Then the interview starts right there in the terminal:
+The interview starts right there:
 
 ```
 What game were you playing?           → Valorant
@@ -33,20 +33,19 @@ Any specific moments to include?      → (blank — you trust the AI)
 Anything else the AI should know?     → ranked match, Silver II
 ```
 
-You answer in about 90 seconds. Then you sit back.
-
-The AI does this — automatically, in order:
+90 seconds of answering. Then you sit back.
 
 | Step | What happens | Time |
 |---|---|---|
-| Transcribe | Your voice gets converted to timestamped text by local Whisper | ~3 min |
-| Analyze | Claude Vision studies 90 key frames, scores each moment 1–10 | ~5 min |
-| Script | Claude writes a video structure: 8 segments, commentary cues, hook, outro | ~1 min |
-| Edit | MoviePy cuts the footage, composites your webcam in the corner, adds captions | ~8 min |
-| Thumbnail | Best gameplay frame + your face + bold title text, ready for YouTube | ~30 sec |
-| Metadata | 3 title options, SEO description, 25 tags — all written by Claude | ~30 sec |
+| **Transcribe** | Your voice converted to timestamped text by local Whisper — runs on your GPU, nothing leaves your machine | ~3 min |
+| **Analyze** | Claude Vision studies 90 key frames from your gameplay, scores each moment 1–10 for entertainment value | ~5 min |
+| **Script** | Claude writes a video structure: 8 segments, commentary cues, hook that grabs in 5 seconds, outro | ~1 min |
+| **Avatar** | Your webcam recording is processed frame-by-frame — when you went wide-eyed at the clutch, the avatar in the corner goes anime-enormous; the yell becomes an open-jaw cartoon reaction | ~4 min |
+| **Edit** | MoviePy cuts the footage, composites your caricature avatar in the corner, adds captions at the right moments | ~8 min |
+| **Thumbnail** | Best gameplay frame + your face + bold title text, sized and formatted for YouTube | ~30 sec |
+| **Metadata** | 3 title options, SEO-optimised description, 25 tags — all written by Claude | ~30 sec |
 
-Terminal shows you the generated titles:
+Terminal shows you the titles:
 
 ```
 Generated Titles
@@ -64,48 +63,51 @@ Thumbnail set.
 Uploaded! https://www.youtube.com/watch?v=xXxXxXxXxX
 ```
 
-**Total time from pressing stop to having a video on YouTube: ~20 minutes. Your effort: 90 seconds of answering questions.**
+**Total time from pressing stop to having a video on YouTube: ~20 minutes. Your effort: 90 seconds.**
+
+The webcam corner? Not your raw face — a cartoon version of you with reactions three times bigger than real life. Viewers see the clutch moment twice: in the gameplay, and in your avatar's exploding expression in the corner.
 
 ---
 
 ## What you need
 
 ### Hardware
-- A PC that can run your game (anything modern)
-- A webcam (built-in or USB)
-- A microphone (headset, desktop, or built-in)
-- A GPU helps for Whisper transcription — but CPU works too, just slower
+- A gaming PC (anything that runs your game)
+- A webcam — built-in or USB
+- A microphone — headset, desktop, or built-in
+- A GPU helps Whisper transcribe faster, but CPU works fine
 
-### Software (one-time installs)
+### Software
 
 | Tool | Purpose | Install |
 |---|---|---|
-| Python 3.10+ | Runs everything | https://python.org |
-| FFmpeg | Records your screen, webcam, and audio | `sudo apt install ffmpeg` / `brew install ffmpeg` |
-| pip packages | All AI and video libraries | `pip install -r requirements.txt` |
+| Python 3.10+ | Runs everything | python.org |
+| FFmpeg | Records screen, webcam, and audio simultaneously | `sudo apt install ffmpeg` |
+| pip packages | All AI, video, and face-tracking libraries | `pip install -r requirements.txt` |
 
-### API keys (two, both free tiers available)
+### API keys
 
 | Key | Used for | Get it at |
 |---|---|---|
-| Anthropic API | Claude Vision (frame analysis) + script + metadata | https://console.anthropic.com |
-| Google OAuth2 | Uploading to your YouTube channel | See step 3 below |
+| Anthropic | Claude Vision (frame analysis) + script + metadata | console.anthropic.com |
+| Google OAuth2 | Uploading to your YouTube channel | See setup step 3 below |
 
-> The Whisper transcription runs **locally on your machine** — no API key, no cost, no audio leaves your computer.
+> Whisper transcription and the caricature avatar both run **entirely on your machine** — no API key, no cost, nothing sent to a server.
 
 ---
 
 ## Setup (do this once)
 
-### Step 1 — Install Python dependencies
+### Step 1 — Install dependencies
 
 ```bash
 git clone https://github.com/rickhooghiemstra/yt-ai-editor
 cd yt-ai-editor
 pip install -r requirements.txt
+sudo apt install ffmpeg
 ```
 
-### Step 2 — Configure your keys
+### Step 2 — Configure your environment
 
 ```bash
 cp .env.example .env
@@ -114,32 +116,54 @@ cp .env.example .env
 Open `.env` and fill in:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...          # from console.anthropic.com
-SCREEN_RESOLUTION=1920x1080           # match your monitor
-WEBCAM_DEVICE=/dev/video0             # run: ls /dev/video* to check
-AUDIO_DEVICE=default                  # run: pactl list sources short to check
+ANTHROPIC_API_KEY=sk-ant-...     # from console.anthropic.com
+SCREEN_RESOLUTION=1920x1080      # match your monitor
+WEBCAM_DEVICE=/dev/video0        # run: ls /dev/video* to find yours
+AUDIO_DEVICE=default             # run: pactl list sources short to find yours
 ```
 
 ### Step 3 — Connect your YouTube channel
 
-This is a one-time 5-minute process:
+One-time, takes about 5 minutes:
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) → **New Project**
-2. Go to **APIs & Services → Library** → search **YouTube Data API v3** → Enable
-3. Go to **APIs & Services → Credentials** → **+ Create Credentials → OAuth client ID**
-4. Configure consent screen if prompted: External, add your Gmail as a test user, scope: `youtube.upload`
+2. **APIs & Services → Library** → search **YouTube Data API v3** → Enable
+3. **APIs & Services → Credentials** → **+ Create Credentials → OAuth client ID**
+4. If prompted to configure consent screen: External, add your Gmail as test user, scope `youtube.upload`
 5. Application type: **Desktop app** → Create → **Download JSON**
-6. Save the downloaded file as `client_secrets.json` in the project root
+6. Save the file as `client_secrets.json` in the project root
 
-The first time you upload, a browser tab opens asking you to approve access. After that it's fully silent and automatic.
+The first upload opens a browser tab asking you to approve. After that it runs silently forever.
 
-### Step 4 — Verify everything works
+### Step 4 — Calibrate the avatar to your face
+
+Take one selfie — neutral expression, looking at the camera, decent lighting. Then:
+
+```bash
+python main.py calibrate my_photo.jpg
+```
+
+This takes 5 seconds. MediaPipe maps your neutral face and saves the proportions to `recordings/neutral_baseline.json`. Every expression the avatar shows from that point on is exaggerated *relative to your specific face* — not a generic model.
+
+Before your first session, preview it live:
+
+```bash
+python main.py avatar-preview
+```
+
+A side-by-side window opens: **Original | Caricature**. Make sure it looks right. Press Q to close. Tune with:
+
+```bash
+python main.py avatar-preview --exaggeration 3.0 --cartoon 0.9
+```
+
+### Step 5 — Verify everything
 
 ```bash
 python main.py setup
 ```
 
-You'll see green checkmarks or specific instructions if anything is missing.
+Green checkmarks mean you're good. Any red items include the exact fix.
 
 ---
 
@@ -151,26 +175,25 @@ You'll see green checkmarks or specific instructions if anything is missing.
 python main.py pipeline
 ```
 
-Press `Ctrl+Shift+R` to start recording. Play your game. Press `Ctrl+Shift+R` again when done. Answer 7 questions. Walk away.
+Press `Ctrl+Shift+R` to start. Play. Press again when done. Answer 7 questions. Walk away — video is uploaded by the time you're back.
 
 ### Option B — Record now, process later
 
-Start recording:
 ```bash
 python main.py record
 ```
-Press `Ctrl+Shift+R` in-game to toggle. Stop the daemon with `Ctrl+C` when done.
 
-Process the files later:
+Press `Ctrl+Shift+R` to start and stop. Ctrl+C to exit the daemon. Process whenever you're ready:
+
 ```bash
 python main.py process recordings/raw/20260602_143022/screen.mp4 \
                             recordings/raw/20260602_143022/webcam.mp4 \
                             recordings/raw/20260602_143022/audio.wav
 ```
 
-### Option C — Use your own recordings (OBS, etc.)
+### Option C — Use your own recordings
 
-If you already record with OBS or any other tool, just point the pipeline at your files:
+Already record with OBS or another tool? Just point the pipeline at your files:
 
 ```bash
 python main.py process gameplay.mp4 facecam.mp4 mic_audio.wav
@@ -178,126 +201,79 @@ python main.py process gameplay.mp4 facecam.mp4 mic_audio.wav
 
 ---
 
-## Caricature avatar
+## The caricature avatar
 
-Instead of showing your raw webcam feed in the corner of the video, the pipeline renders a **stylized cartoon version of you** with exaggerated reactions — when you barely raise an eyebrow, the avatar raises it dramatically; a small smile becomes a huge grin; wide eyes become enormous.
+Your webcam corner in the final video isn't your raw face — it's a cartoon version of you where every reaction is amplified.
 
-### How it works
+**What it detects and amplifies:**
 
-MediaPipe detects 468 landmarks on your face in every frame. The filter:
-1. Measures expression intensity (how open your mouth is, how raised your brows are, etc.)
-2. Amplifies those measurements by 2.5× using a smooth power curve — so subtle reactions read as big ones on screen
-3. Warps the eye, brow, and mouth regions of your actual face to match the exaggerated values
-4. Applies a cartoon shader: bilateral smooth + edge overlay + saturation boost
-5. Adds comic overlays on extreme reactions (shock lines for surprise, sweat drop for panic)
-
-The exaggeration is calibrated to **your specific neutral face** — not a generic face — so it reads as you, just more expressive.
-
-### Step 1 — Calibrate once from a photo
-
-Take a selfie with a neutral expression (relaxed face, looking at camera, decent lighting). Then:
-
-```bash
-python main.py calibrate my_photo.jpg
-```
-
-This runs MediaPipe on your photo, records your resting face proportions, and saves them to `recordings/neutral_baseline.json`. Takes about 5 seconds.
-
-### Step 2 — Preview before recording
-
-See the filter live on your webcam before you commit to a session:
-
-```bash
-python main.py avatar-preview
-```
-
-This opens a side-by-side window: **Original | Caricature**. Use it to verify the effect looks right. Press Q to close.
-
-Tune the strength with flags:
-```bash
-python main.py avatar-preview --exaggeration 3.0 --cartoon 0.9
-```
-
-| Flag | Default | Effect |
-|---|---|---|
-| `--exaggeration` | `2.5` | How much reactions are amplified (1.0 = off, 3.0 = extreme) |
-| `--cartoon` | `0.75` | Cartoon shader strength (0 = natural, 1 = full comic style) |
-
-### Step 3 — It runs automatically
-
-Once calibrated, the caricature filter runs automatically as part of the pipeline. Your raw webcam recording is kept, and a processed version is rendered before compositing into the final video. No extra steps needed.
-
-To disable the avatar for a specific run, pass `--no-avatar` (not yet exposed) or delete `recordings/neutral_baseline.json` to revert to raw webcam.
-
-### What the reactions look like
-
-| Your expression | What the avatar does |
+| Your real expression | What the avatar shows |
 |---|---|
 | Slight smile | Wide grin |
-| Raised eyebrow | Dramatic lift |
+| Raised eyebrow | Dramatic single-brow lift |
 | Eyes going wide | Anime-large eyes |
 | Mouth dropping open | Exaggerated jaw drop |
-| Extreme surprise | Shock lines radiate from center of frame |
-| Panic / "oh no" moment | Blue sweat drop appears top-right |
+| Full surprise (eyes + brows) | Shock lines radiate from the frame center |
+| Panic / "oh no" mouth | Blue sweat drop in the corner |
+
+**How it works:** MediaPipe maps 468 face landmarks every frame. It measures how far each feature is from your neutral baseline (from the calibration photo), then amplifies that delta by 2.5× using a smooth curve — so subtle reactions become dramatic without looking broken. Then a cartoon shader (bilateral smooth + edge overlay + saturation boost) gives the whole thing a comic-book look.
+
+**The calibration matters.** Without it, the system guesses your neutral face from averages and the exaggeration may look off. With it, it knows your face specifically and the effect is clean.
+
+**Tuning:**
+
+| Flag | Default | What it does |
+|---|---|---|
+| `--exaggeration` | `2.5` | Reaction amplifier. 1.0 = off, 2.5 = noticeable, 3.5 = extreme |
+| `--cartoon` | `0.75` | Cartoon shader strength. 0 = natural colour, 1 = full comic style |
+
+The processed webcam is cached per session. To re-render with different settings, delete `recordings/raw/<session_id>/caricature_webcam.mp4` and re-run the pipeline.
 
 ---
 
 ## Video types
 
-Answer one question differently and you get a completely different video from the same footage:
+Same raw footage. One question answered differently. Completely different video.
 
-| Type | What the AI builds | Length |
+| Type | What gets built | Length |
 |---|---|---|
-| **Highlights Reel** | Best moments only, fast cuts, hype energy | 2–5 min |
-| **Full Commentary** | Full session with your voice as narration structure | 10–30 min |
-| **Tutorial / Guide** | Educational cut: explains decisions, tips-focused | 5–15 min |
-| **YouTube Short** | 60-second vertical clip, top moment only | ~60 sec |
+| **Highlights Reel** | Best-scored moments only, fast cuts, hype energy | 2–5 min |
+| **Full Commentary** | Full session structured around your voice narration | 10–30 min |
+| **Tutorial / Guide** | Educational cut: strategy, decision moments, tips | 5–15 min |
+| **YouTube Short** | 60-second vertical clip, single best moment | ~60 sec |
+
+---
+
+## What the AI finds in your footage
+
+The analyzer sends batches of key frames to Claude Vision. For each frame it asks:
+
+- What is happening in the game?
+- Is this a highlight moment, and why?
+- What is the energy level — calm, medium, intense, or peak?
+- Would this engage a *[your chosen audience]* viewer?
+
+Every moment gets a score from 1–10. The script only includes the highest-scoring moments trimmed to your target length. Nothing is random — every cut is justified by what Claude found in the frame combined with what you said out loud (from the transcript) at that timestamp.
 
 ---
 
 ## Output files
 
-After each run you'll find:
-
 ```
 output/
-├── videos/     valorant_20260602_143022.mp4       ← the final video
-├── thumbnails/ valorant_20260602_143022_thumb.jpg  ← ready-to-use thumbnail
-└── metadata/   valorant_20260602_143022_meta.json  ← titles, description, tags
+├── videos/     valorant_20260602_143022.mp4        ← final video, ready to upload
+├── thumbnails/ valorant_20260602_143022_thumb.jpg  ← 1280×720, YouTube-formatted
+└── metadata/   valorant_20260602_143022_meta.json  ← all 3 titles, description, tags
+
+recordings/
+└── raw/
+    └── 20260602_143022/
+        ├── screen.mp4            ← original gameplay recording
+        ├── webcam.mp4            ← original raw webcam
+        ├── caricature_webcam.mp4 ← processed avatar version (cached)
+        ├── audio.wav             ← original audio
+        └── transcript.json       ← timestamped transcript (cached)
 ```
-
-The metadata JSON is useful if you want to review or tweak the YouTube copy before it goes live.
-
----
-
-## Tuning Whisper quality
-
-The default model (`base`) is fast and accurate enough for most commentary. If you want better transcription (especially for fast speech or background noise):
-
-Edit `src/modules/transcriber.py`, find `model_size="base"` and change it:
-
-| Model | Accuracy | GPU RAM needed | Speed on CPU |
-|---|---|---|---|
-| `tiny` | Good | 1 GB | Fast |
-| `base` | Better | 1 GB | Fast |
-| `small` | Great | 2 GB | Medium |
-| `medium` | Excellent | 5 GB | Slow |
-| `large-v3` | Best | 10 GB | Very slow |
-
-The model downloads automatically on first use.
-
----
-
-## How the AI makes editing decisions
-
-When Claude analyzes your footage it looks at:
-
-- **Energy spikes** — moments where the action clearly escalates
-- **Win/loss moments** — kills, deaths, objectives, clutches
-- **Rare events** — aces, comebacks, funny fails, achievements
-- **Your voice** — the transcript tells it when *you* react with excitement
-
-Each frame gets a score from 1–10. The script only uses moments with the highest scores, trimmed to fit your target length. Nothing is random — every cut is justified by what the AI found in the footage.
 
 ---
 
@@ -305,33 +281,63 @@ Each frame gets a score from 1–10. The script only uses moments with the highe
 
 | Component | Cost |
 |---|---|
-| Whisper transcription | Free (runs locally) |
-| Claude Vision analysis | ~$0.05–0.20 per session (depends on session length) |
+| Whisper transcription | Free — runs locally on your machine |
+| Caricature avatar filter | Free — runs locally on your machine |
+| Claude Vision (frame analysis) | ~$0.05–0.20 per session |
 | Claude script + metadata | ~$0.02 per video |
 | YouTube upload | Free |
 | **Total per video** | **< $0.25** |
 
 ---
 
+## Whisper quality
+
+Default model is `base` — fast and accurate for most commentary. To change it, edit `src/modules/transcriber.py` and find `model_size="base"`:
+
+| Model | Accuracy | GPU RAM | CPU speed |
+|---|---|---|---|
+| `tiny` | Good | 1 GB | Fast |
+| `base` | Better | 1 GB | Fast |
+| `small` | Great | 2 GB | Medium |
+| `medium` | Excellent | 5 GB | Slow |
+| `large-v3` | Best | 10 GB | Very slow |
+
+Downloads automatically on first use.
+
+---
+
+## CLI reference
+
+```
+python main.py pipeline                          # record + process + upload, all-in-one
+python main.py record                            # hotkey daemon only
+python main.py process screen.mp4 cam.mp4 a.wav # process existing files
+python main.py calibrate photo.jpg              # calibrate avatar to your face
+python main.py avatar-preview                   # live side-by-side webcam preview
+python main.py setup                            # check all dependencies and keys
+```
+
+---
+
 ## Troubleshooting
 
-**Hotkey doesn't work while in-game**
-On Linux with Wayland, `pynput` needs X11 compatibility mode. Run the game with `DISPLAY=:0` or enable Xwayland.
+**Hotkey doesn't trigger while in-game**
+On Linux with Wayland, `pynput` needs X11 compatibility. Launch your game with `DISPLAY=:0` or enable Xwayland in your compositor settings.
 
-**Webcam not found**
-Run `ls /dev/video*` to list devices. Update `WEBCAM_DEVICE` in `.env`.
+**Webcam not detected**
+Run `ls /dev/video*` to list devices. Update `WEBCAM_DEVICE` in `.env` — it may be `/dev/video2` if you have multiple USB devices.
 
-**Audio is silent in the recording**
-Run `pactl list sources short`, find your microphone's name, and set `AUDIO_DEVICE` in `.env`.
+**Audio is silent in recordings**
+Run `pactl list sources short`, find your microphone's full name, and set it as `AUDIO_DEVICE` in `.env`.
 
-**YouTube upload opens a browser on a remote server**
-Run the first upload locally once to generate `youtube_token.json`, then copy that file to your server. All future uploads will be silent.
+**YouTube upload tries to open a browser on a headless server**
+Run the first upload from your local machine to generate `youtube_token.json`, then copy that file to the server. All future uploads are silent.
 
-**MoviePy caption text doesn't appear**
-Install ImageMagick: `sudo apt install imagemagick`. Captions require it; everything else works without it.
+**Caption text doesn't appear on video**
+Install ImageMagick: `sudo apt install imagemagick`. MoviePy's `TextClip` requires it. Everything else works without it.
 
-**Avatar filter is too extreme / too subtle**
-Run `python main.py avatar-preview --exaggeration 1.5` to dial it back, or `--exaggeration 3.5` to push it further. Then re-run the pipeline — the processed webcam file is cached, so delete `recordings/raw/<session>/caricature_webcam.mp4` to force a re-render with new settings.
+**Avatar filter looks wrong / no face detected**
+For calibration: use a photo where your face fills at least 20% of the frame, with even lighting and no heavy shadows — MediaPipe needs a clear forward-facing view. For live sessions: the filter falls back to cartoon-shader-only if your face goes out of frame temporarily, so partial detection is fine.
 
-**No face detected in calibration photo**
-Make sure the photo shows your full face with good lighting and no heavy shadows. The face should take up at least 20% of the frame. MediaPipe works best on forward-facing photos.
+**Avatar reactions are too extreme or too subtle**
+Run `python main.py avatar-preview --exaggeration 1.8` to dial back, or `--exaggeration 3.2` to push further. Once you find the right value, delete the cached `caricature_webcam.mp4` in the session folder and re-run the pipeline to render with the new setting.
