@@ -1,8 +1,9 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 
 echo ============================================================
-echo  YT AI Editor — Windows Installer
+echo  YT AI Editor - Windows Installer
 echo ============================================================
 echo.
 
@@ -100,6 +101,7 @@ echo.
 echo ============================================================
 echo  Installation complete!
 echo ============================================================
+
 echo.
 echo  Next steps:
 echo    1. Edit .env and add your ANTHROPIC_API_KEY
