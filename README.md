@@ -12,7 +12,7 @@ A local browser app that turns raw gaming footage into a YouTube-ready video: AI
 
 **macOS** — double-click `install_mac.command`
 
-Both scripts check Python and FFmpeg, create a virtual environment, install all dependencies, and drop a `launch` script on your desktop. After that, just double-click `launch.bat` (Windows) or `launch_mac.command` (macOS) to open the app.
+Both scripts check Python and FFmpeg, create a virtual environment, install all dependencies, and drop a `launch` script. After that, just double-click `launch.bat` (Windows) or `launch_mac.command` (macOS) to open the app.
 
 **Manual / Linux:**
 
@@ -21,7 +21,7 @@ git clone https://github.com/rickhooghiemstra/yt-ai-editor
 cd yt-ai-editor
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-sudo apt install ffmpeg mpv        # mpv is for preview before upload
+sudo apt install ffmpeg mpv        # mpv is for CLI preview before upload
 python app.py
 ```
 
@@ -47,6 +47,7 @@ You fill in the form (takes 60 seconds):
 | Audience | Casual |
 | Tone | Energetic / Hype |
 | Target length | `4` min |
+| Thumbnail style | Action |
 | Specific moments | *(blank — you trust the AI)* |
 | Anything else | `ranked match, Silver II` |
 
@@ -59,19 +60,25 @@ You click **Start Processing**. The progress bars animate. You go make coffee.
 | **Script** | Claude writes 8 segments, names each, assigns music moods, writes hook + outro + captions | ~1 min |
 | **Avatar** | Webcam processed frame-by-frame — your wide eyes go anime-enormous, jaw drop becomes exaggerated cartoon | ~4 min |
 | **Edit** | Clips cut and assembled, caricature avatar in the corner, captions overlaid | ~8 min |
-| **Music** | Mood-matched background track fades in at 15% volume under your gameplay audio | ~2 min |
-| **Thumbnail** | Best gameplay frame + your face in a circle + bold title text, 1280×720 YouTube-ready | ~30 sec |
-| **Metadata** | 3 title options, SEO description with chapter timestamps, 25 tags — all Claude | ~30 sec |
+| **Music** | Mood-matched track from the built-in library fades in at 15% volume under your gameplay audio | ~2 min |
+| **Thumbnail** | Best gameplay frame + your face in a circle + bold title, 1280×720 YouTube-ready | ~30 sec |
+| **Metadata** | 3 title options, SEO description with chapters + hashtags + your social links, 25 tags | ~30 sec |
 
-The **Results** section appears in the browser. Three title cards:
+The **upload preview card** appears. You see:
+
+- **Thumbnail** rendered in your chosen style, with one-click style-switch buttons (Action / Bold / Minimal) to try alternatives
+- **Three title cards** — click to select, then edit the text inline before uploading
+- **Description** — expandable, fully editable. Chapters, hashtags, and your social links already woven in
+- **Tags** — shown as chips
+- **Privacy** selector
 
 ```
-1. "1v4 Clutch in RANKED — Silver Has Never Looked This Clean"  [shock]
-2. "How I Almost Threw a Ranked Game (But Didn't)"              [personal]
-3. "Silver II Ranked Highlights — Valorant 2026"                [numbers]
+Title 1: "1v4 Clutch in RANKED — Silver Has Never Looked This Clean"  [shock]
+Title 2: "How I Almost Threw a Ranked Game (But Didn't)"              [personal]
+Title 3: "Silver II Ranked Highlights — Valorant 2026"                [numbers]
 ```
 
-You click title 1. Set privacy to **Unlisted**. Click **Upload to YouTube**.
+You click title 1, tweak one word, set privacy to **Unlisted**, click **Upload to YouTube**.
 
 ```
 Uploaded! https://www.youtube.com/watch?v=xXxXxXxXxX
@@ -79,7 +86,7 @@ Uploaded! https://www.youtube.com/watch?v=xXxXxXxXxX
 
 **Total time from pressing stop to video on YouTube: ~25 minutes. Your effort: ~60 seconds.**
 
-The webcam corner shows a cartoon you with three-times-bigger reactions. The description has clickable chapter timestamps. There's mood-matched music under the gameplay. Every clip was scored and selected by AI that knew exactly what to look for in Valorant.
+The webcam corner shows a cartoon you with three-times-bigger reactions. The description has clickable chapter timestamps, your Twitch link, and a hashtag block. There's mood-matched music from the built-in library under the gameplay. Every clip was scored and selected by AI that knew exactly what to look for in Valorant.
 
 And those three highlight moments just got saved to your clip library. Next Sunday you open the **Clip Library** page, click **Generate Best-Of Video**, and a weekly compilation builds itself.
 
@@ -125,9 +132,9 @@ The app runs as a local web server — nothing connects to the internet. All pro
 | Page | What it does |
 |---|---|
 | **Record** | Big start/stop toggle, live recording timer, Quick Clip mode switch, hotkey info |
-| **Process** | File path inputs (auto-filled), interview form, live pipeline progress bars, title picker, privacy selector, upload button |
+| **Process** | File path inputs (auto-filled), interview form, live pipeline progress bars, upload preview card |
 | **Clip Library** | Filter highlight bank by game / time window / score, view clips table, generate best-of compilations |
-| **Settings** | API keys, recording devices, avatar sliders, Whisper model selector, YouTube credentials status |
+| **Settings** | API keys, recording devices, avatar sliders, Whisper model, social links, YouTube credentials |
 
 ### Why browser-based?
 
@@ -171,7 +178,11 @@ In **Settings**, set:
 | Webcam device | Linux: `ls /dev/video*` to find yours. Windows: `0`, `1`, etc. |
 | Audio device | Linux: `pactl list sources short`. Windows/macOS: `default` usually works |
 
-### Step 4 — Connect your YouTube channel
+### Step 4 — Add your social links (optional but recommended)
+
+In **Settings → Channel & social links**, fill in your Twitter, Twitch, Instagram, and TikTok URLs. They're appended to every generated description automatically — you never have to paste them manually.
+
+### Step 5 — Connect your YouTube channel
 
 One-time, takes about 5 minutes:
 
@@ -184,7 +195,7 @@ One-time, takes about 5 minutes:
 
 The first upload opens a browser tab for approval. After that it's fully silent. Full walkthrough is in **Settings → YouTube → setup guide**.
 
-### Step 5 — Calibrate the avatar to your face
+### Step 6 — Calibrate the avatar to your face
 
 Take one selfie — neutral expression, facing the camera, decent lighting — then run:
 
@@ -193,8 +204,6 @@ python main.py calibrate my_photo.jpg
 ```
 
 Takes 5 seconds. MediaPipe maps your resting face proportions to `recordings/neutral_baseline.json`. Without this, exaggeration is relative to a generic face model. With it, every reaction is amplified relative to *your* specific neutral — so it looks like you, just louder.
-
-You can also do this from **Settings → Caricature avatar** in the app (drag the sliders to preview).
 
 Preview the effect live:
 
@@ -205,7 +214,7 @@ python main.py avatar-preview --exaggeration 3.0   # push it further
 
 Press Q to close.
 
-### Step 6 — Verify everything
+### Step 7 — Verify everything
 
 ```bash
 python main.py setup
@@ -225,7 +234,7 @@ python app.py       # or double-click launch.bat / launch_mac.command
 
 1. **Record page** — hit Start, play your game, hit Stop
 2. **Process page** — paths fill automatically, fill in the form, click Start Processing
-3. Results appear when done — pick a title, set privacy, click Upload
+3. **Upload card** appears — thumbnail preview, edit the title, review the description, set privacy, click Upload
 
 ### CLI — fully automatic
 
@@ -262,6 +271,33 @@ python main.py process gameplay.mp4 facecam.mp4 mic_audio.wav
 ---
 
 ## Features
+
+### Upload preview card
+
+Before anything goes to YouTube, the Process page shows a full preview of what will be uploaded:
+
+- **Thumbnail image** (320×180 preview) with style-switch buttons — switch between Action, Bold, and Minimal without re-running the pipeline
+- **3 AI-generated titles** as clickable cards — pick one, then edit the text inline
+- **Full description** in an expandable textarea — chapters, hashtags, and your social links already woven in, freely editable before upload
+- **Tags panel** showing all generated tags as chips
+- **Privacy selector** — Private / Unlisted / Public
+- Upload button only activates on this card — there's no way to accidentally upload before you've reviewed everything
+
+---
+
+### Thumbnail styles
+
+Pick a style per video from the Process form. Each uses the same best gameplay frame but with a different layout:
+
+| Style | Look |
+|---|---|
+| **Action** (default) | Gameplay frame darkened + title in a coloured label pill + face circle top-right + left accent bar |
+| **Bold** | Solid colour band fills the bottom quarter + large title inside the band + thin accent line at top |
+| **Minimal** | Dark vignette around the frame + large centred title text + thin accent line at the bottom |
+
+Tone sets the colour scheme — energetic = red/yellow, chill = blue/teal, funny = yellow/orange, dramatic = purple. You can switch styles after processing using the quick-swap buttons on the thumbnail preview.
+
+---
 
 ### Caricature avatar
 
@@ -310,7 +346,7 @@ The analyzer and scriptwriter know about 14 games and what to look for in each:
 | **Zoo Tycoon / Planet Zoo** | Animal habitat reveals, rare species births, escapes, five-star ratings |
 | **Jurassic World Evolution** | Dinosaur breakouts, new species hatches, park chaos moments, dino fights |
 
-Any other game gets a generic profile — Claude falls back to skill displays, close calls, wins, and visible reactions. Game name is fuzzy-matched: "val", "valo", and "valorant" all resolve to the same profile. "jwe", "jwe2", and "jurassic park game" all map to Jurassic World Evolution.
+Any other game gets a generic profile — Claude falls back to skill displays, close calls, wins, and visible reactions. Game name is fuzzy-matched: "val", "valo", and "valorant" all resolve to the same profile.
 
 ---
 
@@ -338,7 +374,19 @@ The `best-of` command pulls top clips for a game and time window, assembles a co
 
 ### Background music
 
-Drop royalty-free MP3 or WAV files into the mood subfolder that matches your content:
+The library ships with **10 royalty-free tracks** (CC0 — no attribution required) ready to use out of the box:
+
+| Folder | Tracks included |
+|---|---|
+| `energetic/` | Action Strike, Energizing |
+| `chill/` | Be Chillin, Kalimba Relaxation Music |
+| `dramatic/` | Epic Boss Battle, Kings Trailer |
+| `funny/` | Circus of Freaks, Comic Game Loop Mischief |
+| `inspirational/` | Inspiration, Journey of Hope |
+
+All sourced from [FreePD.com](https://freepd.com) — CC0 public domain, commercial use allowed, no credit needed. License details in `music/CREDITS.txt`.
+
+To add more, drop any MP3 or WAV into the matching folder:
 
 ```
 music/
@@ -349,15 +397,28 @@ music/
 └── inspirational/ ← piano, uplifting synth
 ```
 
-Claude assigns a mood to each video segment. The mixer picks a random matching track, loops if shorter than the video, fades in over 2s and out over 3s, mixes at 15% volume. Empty folder = silently skipped.
+Claude assigns a mood to each video segment. The mixer picks a random matching track, loops if shorter than the video, fades in over 2s and out over 3s, mixes at 15% volume. See `music/README.md` for sources and attribution instructions.
 
-**Free sources:** YouTube Audio Library, Incompetech (Kevin MacLeod — CC BY 4.0), Pixabay Music, FreeMusicArchive. See `music/README.md` for attribution instructions.
+---
+
+### YouTube descriptions
+
+Every generated description follows a structured format optimised for watch time and discoverability:
+
+1. **Hook line** — references the best moment, written to earn the click
+2. **What's in this video** — 2–3 natural sentences, no keyword stuffing
+3. **Chapter timestamps** — clickable in YouTube's progress bar
+4. **Call-to-action** — subscribe prompt
+5. **Social links** — your Twitter, Twitch, Instagram, TikTok, and any custom footer (set once in Settings)
+6. **Hashtags** — 3–5 game-relevant tags for YouTube search
+
+The full description is shown in the upload preview card before anything is sent to YouTube — edit it freely.
 
 ---
 
 ### Chapter markers
 
-Every video gets YouTube chapter timestamps in its description automatically. Claude names each segment; the pipeline calculates exact output timestamps accounting for speed changes.
+Claude names each video segment during script generation. The pipeline calculates exact output timestamps accounting for speed changes and embeds them in the description.
 
 ```
 0:00 Intro
@@ -385,12 +446,6 @@ One field changed in the form — completely different video from the same raw f
 
 ---
 
-### Preview before upload
-
-CLI mode: video opens in your media player after rendering. You watch it before anything goes to YouTube. GUI mode: upload button only appears when processing is complete — you choose the title and privacy before clicking.
-
----
-
 ## Output files
 
 ```
@@ -412,6 +467,14 @@ recordings/
         ├── audio.wav                 ← original audio
         ├── transcript.json           ← timestamped transcript (cached)
         └── analysis.json             ← scored moments (cached, used by clip library)
+
+music/
+├── energetic/    ← 2 tracks included + add your own
+├── chill/        ← 2 tracks included
+├── dramatic/     ← 2 tracks included
+├── funny/        ← 2 tracks included
+├── inspirational/← 2 tracks included
+└── CREDITS.txt   ← license info for all included tracks
 ```
 
 ---
@@ -422,7 +485,7 @@ recordings/
 |---|---|
 | Whisper transcription | Free — runs locally |
 | Caricature avatar filter | Free — runs locally |
-| Background music | Free — your own files |
+| Background music | Free — 10 CC0 tracks included, add your own |
 | Claude Vision frame analysis | ~$0.05–0.20 per session |
 | Claude script + metadata | ~$0.02 per video |
 | YouTube upload | Free |
@@ -510,7 +573,7 @@ Tune in **Settings → Caricature avatar**, or run `python main.py avatar-previe
 The library only contains sessions already processed by the pipeline. Process at least one session first. If clips exist but aren't showing, source recording files may have been moved — the library filters out clips with missing files automatically.
 
 **Music isn't in the final video**
-Check `music/<mood>/` contains at least one MP3 or WAV: `ls music/energetic/`. The pipeline skips music silently if folders are empty. See `music/README.md` for free sources.
+The 10 included tracks should work immediately. If you've added your own files, check `music/<mood>/` contains at least one MP3 or WAV: `ls music/energetic/`.
 
 **Quick-clip misses obvious moments**
 Without a transcript, the AI relies entirely on visual cues. Moments only obvious from audio (voice reactions, game sounds) may be missed. Use the full pipeline for sessions where your commentary carries the highlight.
