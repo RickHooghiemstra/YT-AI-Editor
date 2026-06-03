@@ -177,6 +177,39 @@ Green checkmarks for each dependency and key. Any red items include the specific
 
 ---
 
+## App (browser-based GUI)
+
+In addition to the CLI, YT AI Editor ships as a local browser app. No installation beyond the steps above — just run it:
+
+```bash
+python app.py
+```
+
+Your default browser opens automatically at `http://localhost:8080`. The app uses the same dark gaming aesthetic as the rest of the project.
+
+### Pages
+
+| Page | What it does |
+|---|---|
+| **Record** | Big start/stop toggle, live recording timer, Quick Clip mode switch, hotkey reminder |
+| **Process** | File path inputs (auto-filled from last recording), full interview form, live pipeline progress bars, title picker, YouTube privacy selector, upload button |
+| **Clip Library** | Filter your highlight bank by game / time window / score, view clips table, generate best-of compilations without touching the terminal |
+| **Settings** | API keys, recording devices, avatar sliders, Whisper model selector, YouTube credentials status |
+
+### Windows — quick start
+
+Double-click **`install_windows.bat`** — it checks Python and FFmpeg, creates a virtual environment, installs all dependencies, and creates `launch.bat`. After that, double-click `launch.bat` to start the app.
+
+### macOS — quick start
+
+Double-click **`install_mac.command`** — same as above, creates `launch_mac.command`. Grant Screen Recording, Camera, and Microphone permissions in System Settings → Privacy when prompted.
+
+### Why browser-based?
+
+Packaging MediaPipe, faster-whisper, and MoviePy into a native `.exe` or `.app` via PyInstaller hits serious complexity with ML libraries. A local web server is cleaner: you get a polished responsive UI, it runs identically on Windows and macOS, and there are no binary distribution problems. The app never connects to the internet — everything runs locally on `localhost:8080`.
+
+---
+
 ## Daily use
 
 ### Option A — Fully automatic (recommended)
@@ -216,6 +249,14 @@ Already recording with OBS or another tool? Just point the pipeline at your file
 ```bash
 python main.py process gameplay.mp4 facecam.mp4 mic_audio.wav
 ```
+
+### Option E — GUI app (no terminal required)
+
+```bash
+python app.py
+```
+
+Browser opens at `http://localhost:8080`. Use the Record page to start/stop via the on-screen button, then switch to Process, fill in the form, and click Start. All options from options A–D are accessible through the UI — no terminal knowledge needed. Paths auto-fill from your last recording session.
 
 ---
 

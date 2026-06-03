@@ -38,39 +38,51 @@ console = Console()
 
 
 class Pipeline:
-    def __init__(self) -> None:
+    def __init__(self, progress_callback=None) -> None:
         self.settings = get_settings()
         self.settings.ensure_dirs()
+        self._cb = progress_callback or (lambda step, pct, msg: None)
+
+    def _progress(self, step: str, pct: float, msg: str = "") -> None:
+        self._cb(step, pct, msg)
+        console.print(f"[dim][{step}][/dim] {msg}")
 
     # ------------------------------------------------------------------
     # Full pipeline
     # ------------------------------------------------------------------
 
-    def run_from_session(self, recording: RecordingSession) -> Optional[str]:
-        """Full pipeline from a completed recording. Returns YouTube URL or None."""
+    def run_from_session(
+        self,
+        recording: RecordingSession,
+        profile_override: Optional[SessionProfile] = None,
+    ) -> Optional[dict]:
+        """Full pipeline from a completed recording. Returns result dict or None."""
         self._print_header("Processing recording")
-
         session_dir = recording.session_dir
 
         # 1. Transcribe
+        self._progress("transcribe", 0, "Starting transcription...")
         console.rule("[cyan]Step 1/7 — Transcribe[/cyan]")
         transcript_cache = session_dir / "transcript.json"
         if transcript_cache.exists():
-            console.print("[dim]Loading cached transcript...[/dim]")
             transcript = Transcript.load(transcript_cache)
         else:
             transcript = transcribe(recording.audio_file)
             transcript.save(transcript_cache)
+        self._progress("transcribe", 100, "Transcription complete")
 
-        # 2. Interview (while analysis could run, we need game name first)
-        console.rule("[cyan]Step 2/7 — Session Interview[/cyan]")
-        profile = run_interview(recording.duration_seconds)
+        # 2. Interview (skipped if profile provided by GUI)
+        if profile_override:
+            profile = profile_override
+        else:
+            console.rule("[cyan]Step 2/7 — Session Interview[/cyan]")
+            profile = run_interview(recording.duration_seconds)
 
         # 3. Analyze footage
+        self._progress("analyze", 0, "Extracting and analyzing frames...")
         console.rule("[cyan]Step 3/7 — Analyze Footage[/cyan]")
         analysis_cache = session_dir / "analysis.json"
         if analysis_cache.exists():
-            console.print("[dim]Loading cached analysis...[/dim]")
             analysis = _load_analysis(analysis_cache, session_dir)
         else:
             analysis = analyze_footage(
@@ -80,8 +92,8 @@ class Pipeline:
                 game_profile=get_game_profile(profile.game_name),
             )
             _save_analysis(analysis, analysis_cache)
+        self._progress("analyze", 100, f"Found {len(analysis.moments)} moments")
 
-        # Save to clip library
         get_library().add_session_highlights(
             session_id=recording.session_id,
             game=profile.game_name,
@@ -89,17 +101,19 @@ class Pipeline:
             webcam_file=recording.webcam_file,
             moments=analysis.moments,
         )
-
         self._print_analysis_summary(analysis)
 
         # 4. Generate script + metadata
+        self._progress("script", 0, "Generating video script...")
         console.rule("[cyan]Step 4/7 — Generate Script[/cyan]")
         script = generate_script(profile, analysis, transcript)
         metadata = generate_metadata(profile, script, analysis)
-
+        self._progress("script", 100, f"{len(script.segments)} segments generated")
         self._print_script_summary(script, metadata)
 
         # 5. Edit video
+        self._progress("avatar", 0, "Rendering caricature avatar...")
+        self._progress("edit", 0, "Assembling video...")
         console.rule("[cyan]Step 5/7 — Edit Video[/cyan]")
         slug = profile.game_name.lower().replace(" ", "_")
         base_name = f"{slug}_{recording.session_id}"
@@ -115,15 +129,19 @@ class Pipeline:
             output_path=raw_video,
             is_short=is_short,
         )
+        self._progress("avatar", 100, "Avatar rendered")
+        self._progress("edit", 100, "Video assembled")
 
-        # 6. Mix background music
+        # 6. Mix background music + thumbnail
+        self._progress("music", 0, "Mixing background music...")
         console.rule("[cyan]Step 6/7 — Music + Thumbnail[/cyan]")
         mood = script.dominant_mood
         final_video = mix_music(raw_video, output_path, mood)
         if final_video == raw_video:
-            # No music was mixed — use raw as final
             raw_video.rename(output_path)
+        self._progress("music", 100, "Music mixed")
 
+        self._progress("thumbnail", 0, "Generating thumbnail...")
         generate_thumbnail(
             key_frames_dir=analysis.key_frames_dir,
             recommended_frame_index=analysis.recommended_thumbnail_frame,
@@ -133,18 +151,29 @@ class Pipeline:
             tone=profile.tone,
             output_path=thumbnail_path,
         )
+        self._progress("thumbnail", 100, "Thumbnail created")
+        self._progress("metadata", 100, f"{len(metadata.titles)} titles generated")
 
-        # Save metadata
         meta_path = self.settings.metadata_dir / f"{base_name}_meta.json"
         save_json(meta_path, metadata.to_dict())
 
-        # 7. Preview + upload
-        console.rule("[cyan]Step 7/7 — Preview & Upload[/cyan]")
-        should_upload = preview_video(output_path)
-        if not should_upload:
+        # 7. Preview + upload (CLI path)
+        if profile_override is None:
+            # CLI mode: interactive preview and upload
+            console.rule("[cyan]Step 7/7 — Preview & Upload[/cyan]")
+            should_upload = preview_video(output_path)
+            if should_upload:
+                self._upload(output_path, thumbnail_path, metadata)
             return None
 
-        return self._upload(output_path, thumbnail_path, metadata)
+        # GUI mode: return result dict for the UI to handle upload
+        return {
+            "video": output_path,
+            "thumbnail": thumbnail_path,
+            "titles": metadata.titles,
+            "description": metadata.description,
+            "tags": metadata.tags,
+        }
 
     def run_from_files(
         self,
@@ -152,7 +181,8 @@ class Pipeline:
         webcam_file: Path,
         audio_file: Path,
         session_id: str = "manual",
-    ) -> Optional[str]:
+        profile_override: Optional[SessionProfile] = None,
+    ) -> Optional[dict]:
         session_dir = screen_file.parent
         recording = RecordingSession(
             session_id=session_id,
@@ -162,7 +192,7 @@ class Pipeline:
             audio_file=audio_file,
             end_time=time.time(),
         )
-        return self.run_from_session(recording)
+        return self.run_from_session(recording, profile_override=profile_override)
 
     # ------------------------------------------------------------------
     # Quick clip mode — no transcription, vision-only, ~5 min
