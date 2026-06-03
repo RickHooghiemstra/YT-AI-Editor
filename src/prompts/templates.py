@@ -120,7 +120,23 @@ Chapter timestamps:
 {chapters_text}
 
 Generate YouTube metadata optimized for maximum reach.
-Include the chapter timestamps in the description exactly as provided above.
+
+Description structure (follow this order):
+1. Hook sentence (1–2 lines, grabs attention, references the best moment)
+2. Blank line
+3. What happens in this video (2–3 sentences, natural language, no keyword stuffing)
+4. Blank line
+5. Chapters (paste the chapter timestamps EXACTLY as provided above — if none, skip)
+6. Blank line
+7. A short friendly call-to-action ("If you enjoyed this, subscribe and hit the bell!")
+8. [SOCIAL_LINKS_PLACEHOLDER] — include this exact placeholder string; the app will replace it with the channel's social links
+9. Blank line
+10. 3–5 hashtags relevant to the game and video type (e.g. #Valorant #GamingHighlights)
+
+For titles: write 3 options using different styles. Aim for <70 characters.
+For tags: 20–30 tags mixing game-specific, general gaming, and content-type terms.
+thumbnail_text: 2–5 UPPERCASE words for bold overlay text (e.g. "1V4 CLUTCH")
+thumbnail_subtext: short lower-case subline (e.g. "silver ii ranked")
 
 Return as JSON:
 {{

@@ -147,15 +147,61 @@ def settings_page() -> None:
 First upload opens a browser tab for approval. After that, fully automatic.
                     """).classes("text-grey-4 text-sm")
 
+        # ── Channel / social links ────────────────────────────────────
+        with ui.card().classes("w-full bg-grey-10 rounded-2xl"):
+            with ui.card_section():
+                ui.label("Channel & social links").classes("text-h6 text-cyan")
+            with ui.card_section().classes("flex flex-col gap-4"):
+                ui.label(
+                    "Appended to every generated video description automatically."
+                ).classes("text-grey-6 text-caption")
+
+                with ui.row().classes("w-full gap-4 flex-wrap"):
+                    twitter_input = ui.input(
+                        "Twitter / X", placeholder="https://twitter.com/yourchannel",
+                        value=current.get("CHANNEL_TWITTER", ""),
+                    ).classes("flex-1 min-w-48")
+                    twitter_input.props("outlined dense dark")
+
+                    twitch_input = ui.input(
+                        "Twitch", placeholder="https://twitch.tv/yourchannel",
+                        value=current.get("CHANNEL_TWITCH", ""),
+                    ).classes("flex-1 min-w-48")
+                    twitch_input.props("outlined dense dark")
+
+                    instagram_input = ui.input(
+                        "Instagram", placeholder="https://instagram.com/yourchannel",
+                        value=current.get("CHANNEL_INSTAGRAM", ""),
+                    ).classes("flex-1 min-w-48")
+                    instagram_input.props("outlined dense dark")
+
+                    tiktok_input = ui.input(
+                        "TikTok", placeholder="https://tiktok.com/@yourchannel",
+                        value=current.get("CHANNEL_TIKTOK", ""),
+                    ).classes("flex-1 min-w-48")
+                    tiktok_input.props("outlined dense dark")
+
+                footer_input = ui.textarea(
+                    label="Custom description footer (optional)",
+                    placeholder="e.g. Business enquiries: email@example.com",
+                    value=current.get("CHANNEL_DESCRIPTION_FOOTER", ""),
+                ).classes("w-full")
+                footer_input.props("outlined dark rows=2")
+
         # ── Save button ───────────────────────────────────────────────
         def save():
             updates = {
-                "ANTHROPIC_API_KEY": anthropic_input.value.strip(),
-                "SCREEN_RESOLUTION": resolution_input.value.strip(),
-                "SCREEN_FPS": str(int(fps_input.value or 30)),
-                "WEBCAM_DEVICE": webcam_input.value.strip(),
-                "AUDIO_DEVICE": audio_input.value.strip(),
-                "WHISPER_MODEL": whisper_sel.value,
+                "ANTHROPIC_API_KEY":          anthropic_input.value.strip(),
+                "SCREEN_RESOLUTION":          resolution_input.value.strip(),
+                "SCREEN_FPS":                 str(int(fps_input.value or 30)),
+                "WEBCAM_DEVICE":              webcam_input.value.strip(),
+                "AUDIO_DEVICE":              audio_input.value.strip(),
+                "WHISPER_MODEL":              whisper_sel.value,
+                "CHANNEL_TWITTER":            twitter_input.value.strip(),
+                "CHANNEL_TWITCH":             twitch_input.value.strip(),
+                "CHANNEL_INSTAGRAM":          instagram_input.value.strip(),
+                "CHANNEL_TIKTOK":             tiktok_input.value.strip(),
+                "CHANNEL_DESCRIPTION_FOOTER": footer_input.value.strip(),
             }
             _save_env(updates)
             ui.notify("Settings saved — restart the app to apply changes.", type="positive")

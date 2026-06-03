@@ -143,7 +143,7 @@ def _get_authenticated_service(settings):
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(secrets_path), SCOPES
             )
-            creds = flow.run_local_server(port=8080)
+            creds = flow.run_local_server(port=8090)
 
         with open(token_path, "wb") as f:
             pickle.dump(creds, f)

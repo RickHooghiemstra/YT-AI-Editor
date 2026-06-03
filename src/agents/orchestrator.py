@@ -55,6 +55,7 @@ class Pipeline:
         self,
         recording: RecordingSession,
         profile_override: Optional[SessionProfile] = None,
+        thumbnail_style: str = "action",
     ) -> Optional[dict]:
         """Full pipeline from a completed recording. Returns result dict or None."""
         self._print_header("Processing recording")
@@ -150,6 +151,7 @@ class Pipeline:
             subtext=metadata.thumbnail_subtext,
             tone=profile.tone,
             output_path=thumbnail_path,
+            style=thumbnail_style,
         )
         self._progress("thumbnail", 100, "Thumbnail created")
         self._progress("metadata", 100, f"{len(metadata.titles)} titles generated")
@@ -182,6 +184,7 @@ class Pipeline:
         audio_file: Path,
         session_id: str = "manual",
         profile_override: Optional[SessionProfile] = None,
+        thumbnail_style: str = "action",
     ) -> Optional[dict]:
         session_dir = screen_file.parent
         recording = RecordingSession(
@@ -192,7 +195,11 @@ class Pipeline:
             audio_file=audio_file,
             end_time=time.time(),
         )
-        return self.run_from_session(recording, profile_override=profile_override)
+        return self.run_from_session(
+            recording,
+            profile_override=profile_override,
+            thumbnail_style=thumbnail_style,
+        )
 
     # ------------------------------------------------------------------
     # Quick clip mode — no transcription, vision-only, ~5 min

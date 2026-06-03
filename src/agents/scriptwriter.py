@@ -192,7 +192,11 @@ def generate_metadata(
 
     meta = _parse_metadata(response.content[0].text)
 
-    # Append music credits to description if present
+    # Replace social links placeholder
+    social_block = settings.social_links_block()
+    meta.description = meta.description.replace("[SOCIAL_LINKS_PLACEHOLDER]", social_block)
+
+    # Append music credits
     if music_credits:
         meta.description += music_credits
 

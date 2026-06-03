@@ -67,6 +67,8 @@ class AppState:
     # Results
     generated_titles: list[dict] = field(default_factory=list)
     selected_title_idx: int = 0
+    generated_description: str = ""
+    generated_tags: list[str] = field(default_factory=list)
     output_video: Optional[Path] = None
     output_thumbnail: Optional[Path] = None
     upload_url: Optional[str] = None
@@ -83,6 +85,8 @@ class AppState:
         self.steps = [PipelineStep(k, l) for k, l in PIPELINE_STEPS]
         self.log_lines = []
         self.generated_titles = []
+        self.generated_description = ""
+        self.generated_tags = []
         self.output_video = None
         self.output_thumbnail = None
         self.upload_url = None

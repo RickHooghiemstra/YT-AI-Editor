@@ -35,6 +35,30 @@ class Settings(BaseSettings):
     # Claude
     claude_model: str = Field(default="claude-sonnet-4-6")
 
+    # Channel / social links (appended to every video description)
+    channel_twitter: str = Field(default="")
+    channel_twitch: str = Field(default="")
+    channel_instagram: str = Field(default="")
+    channel_tiktok: str = Field(default="")
+    channel_description_footer: str = Field(default="")
+
+    def social_links_block(self) -> str:
+        """Returns a formatted social links section for YouTube descriptions."""
+        lines = []
+        if self.channel_twitter:
+            lines.append(f"🐦 Twitter: {self.channel_twitter}")
+        if self.channel_twitch:
+            lines.append(f"🎮 Twitch: {self.channel_twitch}")
+        if self.channel_instagram:
+            lines.append(f"📸 Instagram: {self.channel_instagram}")
+        if self.channel_tiktok:
+            lines.append(f"🎵 TikTok: {self.channel_tiktok}")
+        if self.channel_description_footer:
+            lines.append(self.channel_description_footer)
+        if not lines:
+            return ""
+        return "\n\n---\n" + "\n".join(lines)
+
     @property
     def videos_dir(self) -> Path:
         return self.output_dir / "videos"

@@ -1,0 +1,49 @@
+MUSIC CREDITS
+=============
+All tracks sourced from FreePD.com via the SoundSafari/CC0-1.0-Music repository.
+License: CC0 1.0 Universal (Public Domain) — https://creativecommons.org/publicdomain/zero/1.0/
+No attribution required, but FreePD.com is acknowledged here as the original source.
+
+--- ENERGETIC ---
+
+Music: "Action Strike" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: energetic/Action_Strike.mp3
+
+Music: "Energizing" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: energetic/Energizing.mp3
+
+--- CHILL ---
+
+Music: "Be Chillin" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: chill/Be_Chillin.mp3
+
+Music: "Kalimba Relaxation Music" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: chill/Kalimba_Relaxation_Music.mp3
+
+--- DRAMATIC ---
+
+Music: "Epic Boss Battle" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: dramatic/Epic_Boss_Battle.mp3
+
+Music: "Kings Trailer" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: dramatic/Kings_Trailer.mp3
+
+--- FUNNY ---
+
+Music: "Circus of Freaks" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: funny/Circus_of_Freaks.mp3
+
+Music: "Comic Game Loop - Mischief" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: funny/Comic_Game_Loop_Mischief.mp3
+
+--- INSPIRATIONAL ---
+
+Music: "Inspiration" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: inspirational/Inspiration.mp3
+
+Music: "Journey of Hope" — FreePD.com (freepd.com) — CC0 1.0 Public Domain
+File: inspirational/Journey_of_Hope.mp3
+
+=============
+Source repository: https://github.com/SoundSafari/CC0-1.0-Music
+Original host: https://freepd.com
